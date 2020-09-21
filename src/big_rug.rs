@@ -1,24 +1,26 @@
 /*
-    num_bigint support
+    rug support
 */
 
-use super::big_num_gcd::{extended_gcd, ModInverse};
-use super::traits::{
-    BitManipulation, ConvertFrom, Converter, Modulo, NumberTests, Samplable, ZeroizeBN, EGCD,
-};
 use super::BigInt;
+use super::traits::{BitManipulation, Converter, ConvertFrom, EGCD, Modulo, NumberTests, Samplable, ZeroizeBN};
 use getrandom::getrandom;
-use num_bigint::Sign::Plus;
-use num_bigint::ParseBigIntError;
-use num_integer::Integer;
-use num_traits::{Num, Pow, ToPrimitive, Zero};
+use rug::Integer;
+use rug::integer::{Order, ParseIntegerError};
+use rug::ops::{Pow, RemRounding};
 use std::ops::BitAnd;
 use std::ptr;
 use std::sync::atomic;
 
+//impl BigInt {
+//    fn one() -> Self {
+//        BigInt::from(1)
+//    }
+//}
+
 impl ZeroizeBN for BigInt {
     fn zeroize_bn(&mut self) {
-        unsafe { ptr::write_volatile(self, NumberTests::zero()) };
+        unsafe { ptr::write_volatile(self, BigInt::from(0)) };
         atomic::fence(atomic::Ordering::SeqCst);
         atomic::compiler_fence(atomic::Ordering::SeqCst);
     }
@@ -26,56 +28,56 @@ impl ZeroizeBN for BigInt {
 
 impl Converter for BigInt {
     fn to_vec(value: &BigInt) -> Vec<u8> {
-        value.to_bytes_be().1
+        value.to_digits::<u8>(Order::MsfBe)
     }
 
     fn to_hex(&self) -> String {
-        self.to_str_radix(16u8.into())
+        self.to_string_radix(16)
     }
 
-    fn from_hex(value: &str) -> Result<BigInt, ParseBigIntError> {
-        BigInt::from_str_radix(value, 16u8.into())
+    fn from_hex(value: &str) -> Result<BigInt, ParseIntegerError> {
+        BigInt::from_str_radix(value, 16)
     }
 
     fn from_bytes(bytes: &[u8]) -> BigInt {
-        BigInt::from_bytes_be(Plus, bytes)
+        BigInt::from_digits(bytes, Order::LsfBe)
     }
 
     fn to_bytes(&self) -> Vec<u8> {
-        self.to_bytes_be().1
+        self.to_digits::<u8>(Order::MsfBe)
     }
 }
 
 impl Modulo for BigInt {
     fn mod_pow(base: &Self, exponent: &Self, modulus: &Self) -> Self {
-        base.modpow(exponent, modulus)
+        base.clone().pow_mod(exponent, modulus).unwrap()
     }
 
     fn mod_mul(a: &Self, b: &Self, modulus: &Self) -> Self {
-        (a.mod_floor(modulus) * b.mod_floor(modulus)).mod_floor(modulus)
+        BigInt::from((BigInt::from(a.rem_floor(modulus)) * BigInt::from(b.rem_floor(modulus))).rem_floor(modulus))
     }
 
     fn mod_sub(a: &Self, b: &Self, modulus: &Self) -> Self {
-        let a_m = a.mod_floor(modulus);
-        let b_m = b.mod_floor(modulus);
+        let a_m = BigInt::from(a.rem_floor(modulus));
+        let b_m = BigInt::from(b.rem_floor(modulus));
         let sub_op = a_m - b_m + modulus;
-        sub_op.mod_floor(modulus)
+        sub_op.rem_floor(modulus)
     }
 
     fn mod_add(a: &Self, b: &Self, modulus: &Self) -> Self {
-        (a.mod_floor(modulus) + b.mod_floor(modulus)).mod_floor(modulus)
+        BigInt::from((BigInt::from(a.rem_floor(modulus)) + BigInt::from(b.rem_floor(modulus))).rem_floor(modulus))
     }
 
     fn mod_inv(a: &Self, modulus: &Self) -> Self {
-        a.clone().mod_inverse(modulus).unwrap()
+        a.clone().invert(modulus).unwrap()
     }
 }
 
 impl Samplable for BigInt {
     fn sample_below(upper: &Self) -> Self {
-        assert!(*upper > NumberTests::zero());
+        assert!(*upper > 0);
 
-        let bits = upper.bits();
+        let bits = BigInt::bits(&upper);
         loop {
             let n = Self::sample(bits);
             if n < *upper {
@@ -85,7 +87,7 @@ impl Samplable for BigInt {
     }
 
     fn sample_range(lower: &Self, upper: &Self) -> Self {
-        lower + Self::sample_below(&(upper - lower))
+        lower + Self::sample_below(&BigInt::from(upper - lower))
     }
 
     fn strict_sample_range(lower: &Self, upper: &Self) -> Self {
@@ -96,13 +98,13 @@ impl Samplable for BigInt {
         let bytes = (bit_size - 1) / 8 + 1;
         let mut buf: Vec<u8> = vec![0; bytes];
         getrandom(&mut buf).unwrap();
-        Self::from_bytes(&*buf) >> (bytes * 8 - bit_size)
+        Self::from_bytes(&*buf) >> (bytes * 8 - bit_size) as u32
     }
 
     fn strict_sample(bit_size: usize) -> Self {
         loop {
             let n = Self::sample(bit_size);
-            if n.bits() == bit_size {
+            if BigInt::bits(&n) == bit_size {
                 return n;
             }
         }
@@ -111,28 +113,28 @@ impl Samplable for BigInt {
 
 impl NumberTests for BigInt {
     fn zero() -> Self {
-        num_traits::Zero::zero()
+        BigInt::from(0)
     }
     fn one() -> Self {
-        num_traits::One::one()
+        BigInt::from(1)
     }
     fn is_zero(me: &Self) -> bool {
-        me.is_zero()
+        me == &BigInt::from(0)
     }
     fn is_even(me: &Self) -> bool {
         me.is_even()
     }
     fn is_negative(me: &Self) -> bool {
-        *me < NumberTests::zero()
+        *me < BigInt::from(0)
     }
     fn bits(me: &Self) -> usize {
-        me.bits()
+        me.significant_bits() as usize
     }
 }
 
 impl EGCD for BigInt {
     fn egcd(a: &Self, b: &Self) -> (Self, Self, Self) {
-        extended_gcd(&a.to_biguint().unwrap(), &b.to_biguint().unwrap())
+        a.clone().gcd_cofactors(b.clone(), Integer::new())
     }
 }
 
@@ -141,14 +143,14 @@ impl BitManipulation for BigInt {
         if bit_val {
             *self = self.clone() | BigInt::from(2).pow(bit as u32);
         } else {
-            let all_bits = BigInt::from(2).pow(self.bits() as u32) - 1;
+            let all_bits = BigInt::from(2).pow(BigInt::bits(&self) as u32) - 1;
             let specific_bit = BigInt::from(2).pow(bit as u32);
             *self = self.clone() & (all_bits - specific_bit);
         }
     }
 
     fn test_bit(self: &Self, bit: usize) -> bool {
-        self.bitand(BigInt::from(1 << bit)) > NumberTests::zero()
+        self.bitand(BigInt::from(1 << bit)) > BigInt::from(0)
     }
 }
 
@@ -160,11 +162,8 @@ impl ConvertFrom<BigInt> for u64 {
 
 #[cfg(test)]
 mod tests {
-    use super::Converter;
-    use super::Modulo;
-    use super::Samplable;
-    use num_bigint::BigInt;
-
+    use crate::traits::NumberTests;
+    use super::{BigInt, Converter, Modulo, Samplable};
     use std::cmp;
 
     #[test]
@@ -202,7 +201,6 @@ mod tests {
     #[test]
     fn strict_sample_range_test() {
         let len = 249;
-
         for _ in 1..100 {
             let a = BigInt::sample(len);
             let b = BigInt::sample(len);
@@ -218,7 +216,7 @@ mod tests {
         let len = 249;
         for _ in 1..100 {
             let a = BigInt::strict_sample(len);
-            assert_eq!(a.bits(), len);
+            assert_eq!(BigInt::bits(&a), len);
         }
     }
 

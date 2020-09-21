@@ -7,15 +7,16 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["rust_gmp"]
+default = ["rug"]
 rust_gmp = ["rust-gmp"]
 num_bigint = ["num-bigint", "num-traits", "num-integer"]
 
 [dependencies]
 getrandom = "0.2"
-num-bigint = { version = "0.3", features = ["serde"], optional = true }
+num-bigint = { version = "0.3", features = ["rand", "serde"], optional = true }
 num-integer = { version = "0.1", optional = true }
 num-traits = { version = "0.2", optional = true }
+rug = { version = "1.11", default-features = false, features = ["integer"], optional = true }
 rust-gmp = { version = "0.5", features = ["serde_support"], git = "https://github.com/KZen-networks/rust-gmp", optional = true }
 serde = "1.0"
 serde_derive = "1.0"

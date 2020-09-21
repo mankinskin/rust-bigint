@@ -5,7 +5,7 @@ pub mod bigint {
     use std::fmt;
 
     pub fn serialize<S: ser::Serializer>(x: &BigInt, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&x.to_str_radix(16))
+        serializer.serialize_str(&x.to_hex())
     }
 
     pub fn deserialize<'de, D: de::Deserializer<'de>>(deserializer: D) -> Result<BigInt, D::Error> {
@@ -31,6 +31,7 @@ pub mod bigint {
 
 pub mod vecbigint {
     use crate::BigInt;
+    use crate::traits::Converter;
     #[cfg(feature = "num_bigint")]
     use num_traits::Num;
     use serde::de::SeqAccess;
@@ -41,7 +42,7 @@ pub mod vecbigint {
     pub fn serialize<S: ser::Serializer>(x: &[BigInt], serializer: S) -> Result<S::Ok, S::Error> {
         let mut seq = serializer.serialize_seq(Some(x.len()))?;
         for e in x {
-            seq.serialize_element(&e.to_str_radix(16))?;
+            seq.serialize_element(&e.to_hex())?;
         }
         seq.end()
     }
@@ -77,6 +78,7 @@ pub mod vecbigint {
 
 pub mod vecbigint512 {
     use crate::BigInt;
+    use crate::traits::Converter;
     #[cfg(feature = "num_bigint")]
     use num_traits::Num;
     use serde::de::SeqAccess;
@@ -87,7 +89,7 @@ pub mod vecbigint512 {
     pub fn serialize<S: ser::Serializer>(x: &[BigInt], serializer: S) -> Result<S::Ok, S::Error> {
         let mut seq = serializer.serialize_seq(Some(x.len()))?;
         for e in x {
-            seq.serialize_element(&format!("{:0>512}", e.to_str_radix(16)))?;
+            seq.serialize_element(&format!("{:0>512}", e.to_hex()))?;
         }
         seq.end()
     }

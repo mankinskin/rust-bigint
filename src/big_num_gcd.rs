@@ -122,10 +122,10 @@ pub fn extended_gcd(a: &BigUint, b: &BigUint) -> (BigInt, BigInt, BigInt) {
 
 #[cfg(test)]
 mod tests {
-    use super::{extended_gcd, BigInt, BigUint, ModInverse};
     use crate::num_integer::Integer;
     use crate::num_traits::One;
     use crate::traits::Samplable;
+    use super::{BigInt, BigUint, extended_gcd, ModInverse};
     use num_bigint::Sign::Plus;
     use num_traits::FromPrimitive;
 

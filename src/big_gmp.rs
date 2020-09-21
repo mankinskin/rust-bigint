@@ -118,6 +118,12 @@ impl Samplable for Mpz {
 }
 
 impl NumberTests for Mpz {
+    fn zero() -> Self {
+        Mpz::zero()
+    }
+    fn one() -> Self {
+        Mpz::one()
+    }
     fn is_zero(me: &Self) -> bool {
         me.is_zero()
     }

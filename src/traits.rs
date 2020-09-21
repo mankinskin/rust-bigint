@@ -33,6 +33,8 @@ pub trait Samplable {
 }
 
 pub trait NumberTests {
+    fn zero() -> Self;
+    fn one() -> Self;
     fn is_zero(_: &Self) -> bool;
     fn is_even(_: &Self) -> bool;
     fn is_negative(_: &Self) -> bool;

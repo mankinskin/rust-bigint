@@ -22,3 +22,10 @@ pub type HexError = num_bigint::ParseBigIntError;
 pub mod big_num;
 #[cfg(feature = "num_bigint")]
 mod big_num_gcd;
+
+#[cfg(feature = "rug")]
+pub mod big_rug;
+#[cfg(feature = "rug")]
+pub type BigInt = rug::Integer;
+#[cfg(feature = "rug")]
+pub type HexError = rug::integer::ParseIntegerError;
