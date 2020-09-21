@@ -3,7 +3,8 @@
 Provides traits for common functionality across several Rust BigInt implementations
 
 ## Example interaction: 
-```
+
+```rust
 // import BigInt from this library. use a feature flag to select the BigInt you need
 // also, pull one or more traits from this library into scope
 use rust_bigint::BigInt;
