@@ -1,6 +1,5 @@
-/*
-    num-bigint support
-*/
+//! Implementation of provided traits for num_bigint
+
 
 use super::big_num_gcd::{extended_gcd, ModInverse};
 use super::traits::{

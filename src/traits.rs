@@ -5,6 +5,7 @@ use super::BigInt;
 use super::HexError;
 use std::marker::Sized;
 
+/// A zeroize trait common to BigInts
 pub trait ZeroizeBN {
     fn zeroize_bn(&mut self);
 }
