@@ -1,3 +1,5 @@
+//! Definition and implementation of ModInverse trait for num_bigint
+
 // copied from MIT/Apache-licensed https://github.com/RustCrypto/RSA/blob/7654e6094b00f5e180bed2343a3fc47e45832b5e/src/math.rs
 // because num-bigint currently does not implement modular inverse and extended euclid
 // see https://github.com/rust-num/num-bigint/issues/60

@@ -1,3 +1,5 @@
+//! Implementation of provided traits for GMP (exposed by default)
+
 /*
     GNU Multiple Precision Arithmetic Library (GMP) support
     based on MIT-licensed https://github.com/KZen-networks/curv/blob/master/src/arithmetic/big_gmp.rs
