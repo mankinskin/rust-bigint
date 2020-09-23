@@ -2,7 +2,7 @@
 name = "rust-bigint"
 version = "1.1.0"
 edition = "2018"
-authors = ["Robert Annesi <robert@nash.io>", "Ethan Fast <ethan@nash.io>"]
+authors = ["Robert Annessi <robert@nash.io>", "Ethan Fast <ethan@nash.io>"]
 license = "MIT"
 description = "Common traits and methods for multiple BigInt implementations"
 readme = "Readme.md"
